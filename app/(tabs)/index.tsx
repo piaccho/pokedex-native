@@ -1,74 +1,201 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+/* eslint-disable react/display-name */
+import { FlashList, ListRenderItem } from "@shopify/flash-list";
+import axios from "axios";
+import { Image, ImageStyle } from "expo-image";
+import React, { useState, useEffect, memo, useCallback } from "react";
+import {
+  StyleSheet,
+  View,
+  ActivityIndicator,
+  RefreshControl,
+  TouchableOpacity,
+} from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { ThemedSafeAreaView } from "@/components/ThemedSafeAreaView";
+import { ThemedText } from "@/components/ThemedText";
+import { IconSymbol } from "@/components/ui/IconSymbol";
+import usePokemonData from "@/hooks/usePokemonData";
+import { PokemonDetail, PokemonResult } from "@/types/Pokemon.types";
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+// Constants
+const ITEM_HEIGHT = 150;
+const NUM_COLUMNS = 2;
+
+interface PokemonItemProps {
+  pokemonUrl: string;
 }
 
+const PokemonImage = memo(({ uri }: { uri: string }) => (
+  <Image
+    source={{ uri }}
+    style={styles.image}
+    placeholder={require("@/assets/images/poke-ball.png")}
+  />
+));
+
+const PokemonItem = memo(({ pokemonUrl }: PokemonItemProps) => {
+  const [pokemon, setPokemon] = useState<PokemonDetail | null>(null);
+  const [error, setError] = useState<boolean>(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchPokemonDetails = async () => {
+      try {
+        const response = await axios.get<PokemonDetail>(pokemonUrl);
+        if (isMounted) {
+          setPokemon(response.data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(true);
+          console.error("Error fetching pokemon:", err);
+        }
+      }
+    };
+
+    fetchPokemonDetails();
+    return () => {
+      isMounted = false;
+    };
+  }, [pokemonUrl]);
+
+  if (error) {
+    return (
+      <View style={styles.item}>
+        <ThemedText>Error loading Pokemon</ThemedText>
+      </View>
+    );
+  }
+
+  if (!pokemon) {
+    return (
+      <View style={styles.item}>
+        <ActivityIndicator size="small" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.item}>
+      <PokemonImage uri={pokemon.sprites.front_default} />
+      <ThemedText style={styles.title}>{pokemon.name}</ThemedText>
+    </View>
+  );
+});
+
+// Debug Button component
+const DebugButton = memo(({ pokemons }: { pokemons: PokemonResult[] }) => (
+  <TouchableOpacity
+    style={styles.debugButton}
+    onPress={() => {
+      console.log("Pokemon data: ", JSON.stringify(pokemons, null, 2));
+      console.log(pokemons);
+    }}
+  >
+    <IconSymbol name="ladybug" size={30} color="#999" />
+  </TouchableOpacity>
+));
+
+export default function PokedexScreen() {
+  const {
+    pokemons,
+    refreshing,
+    loadingMore,
+    handleRefresh,
+    loadMore,
+    initialLoader,
+  } = usePokemonData();
+
+  const renderItem: ListRenderItem<PokemonResult> = useCallback(
+    ({ item }) => <PokemonItem pokemonUrl={item.url} />,
+    [],
+  );
+
+  const keyExtractor = useCallback((item: PokemonResult) => item.url, []);
+
+  const renderFooter = useCallback(
+    () =>
+      loadingMore && pokemons.length >= 8 ? (
+        <ActivityIndicator animating size="large" />
+      ) : null,
+    [loadingMore, pokemons.length],
+  );
+
+  if (initialLoader) {
+    return (
+      <SafeAreaProvider>
+        <ThemedSafeAreaView style={styles.container}>
+          <ActivityIndicator size="large" />
+        </ThemedSafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
+
+  return (
+    <SafeAreaProvider>
+      <ThemedSafeAreaView style={styles.container}>
+        <DebugButton pokemons={pokemons} />
+        <FlashList
+          data={pokemons}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          numColumns={NUM_COLUMNS}
+          removeClippedSubviews
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+          ListFooterComponent={renderFooter}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+        />
+      </ThemedSafeAreaView>
+    </SafeAreaProvider>
+  );
+}
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    padding: 10,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  item: {
+    flex: 1,
+    height: ITEM_HEIGHT,
+    borderRadius: 10,
+    margin: 5,
+    padding: 10,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.4,
+    shadowRadius: 2,
+    shadowOffset: { width: 3, height: 3 },
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  image: {
+    width: 100,
+    height: 100,
+    resizeMode: "contain",
+  } as ImageStyle,
+  title: {
+    fontSize: 12,
+    fontFamily: "PokemonClassic",
+    color: "#000",
+    textAlign: "center",
+  },
+  debugButton: {
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 60,
+    height: 60,
+    position: "absolute",
+    zIndex: 1,
+    top: 70,
+    right: 20,
+    backgroundColor: "#fff",
+    borderRadius: 100,
   },
 });
