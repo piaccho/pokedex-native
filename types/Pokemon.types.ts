@@ -10,7 +10,29 @@ export interface PokemonResponse {
   results: PokemonResult[];
 }
 
+interface PokemonType {
+  name: string;
+  url: string;
+}
+
+interface PokemonTypeSlot {
+  slot: number;
+  type: PokemonType;
+}
+
+interface PokemonStat {
+  name: string;
+  url: string;
+}
+
+interface PokemonStatSlot {
+  base_stat: number;
+  effort: number;
+  stat: PokemonStat;
+}
+
 export interface PokemonDetail {
+  id: number;
   sprites: {
     front_default: string;
     other: {
@@ -20,4 +42,7 @@ export interface PokemonDetail {
     };
   };
   name: string;
+  types: PokemonTypeSlot[];
+  weight: number;
+  stats: PokemonStatSlot[];
 }

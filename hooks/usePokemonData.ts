@@ -27,6 +27,7 @@ const usePokemonData = () => {
   const [totalPages, setTotalPages] = useState(initialPokemonData.totalPages);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchData = async (page: number, perPage: number = 6) => {
     try {
@@ -59,6 +60,7 @@ const usePokemonData = () => {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
+      setErrorMessage("Error fetching data");
     } finally {
       setRefreshing(false);
       setLoadingMore(false);
@@ -68,7 +70,6 @@ const usePokemonData = () => {
 
   useEffect(() => {
     if (!renderAfterCalled.current) {
-      // your API call func
       console.log("usePokemonData fetching data...");
       fetchData(pageNo);
       console.log(
@@ -101,6 +102,7 @@ const usePokemonData = () => {
     handleRefresh,
     loadMore,
     initialLoader,
+    errorMessage,
   };
 };
 
