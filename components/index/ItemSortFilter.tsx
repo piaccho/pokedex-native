@@ -10,10 +10,10 @@ import {
   ScrollView,
 } from "react-native";
 
-import { ThemedText } from "../ThemedText";
-import { IconSymbol } from "../ui/IconSymbol";
-
 import { TYPE_IMAGES } from "@/assets/images/pokemon-types/typeImages";
+
+import { ThemedText } from "../common/ThemedText";
+import { IconSymbol } from "../ui/IconSymbol";
 
 export enum SortDirection {
   ASC = "asc",
@@ -83,7 +83,7 @@ export const ItemSortFilter = ({
         onRequestClose={() => setShowSortModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, styles.containerShadow]}>
             <ThemedText style={styles.modalTitle}>Sort by</ThemedText>
 
             <TouchableOpacity
@@ -142,7 +142,7 @@ export const ItemSortFilter = ({
         onRequestClose={() => setShowFilterModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, styles.containerShadow]}>
             <ThemedText style={styles.modalTitle}>Filter by type</ThemedText>
 
             <ScrollView style={styles.typeGrid}>
@@ -188,10 +188,16 @@ const styles = StyleSheet.create({
     height: 50,
     marginBottom: 10,
   },
+  containerShadow: {
+    shadowColor: "#000",
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+  },
   sortFilterItem: {
     flex: 1,
     borderRadius: 10,
-    backgroundColor: "rgb(250, 71, 71)",
+    backgroundColor: "#fa4747",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",

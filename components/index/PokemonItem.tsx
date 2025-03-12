@@ -2,41 +2,39 @@
 /* eslint-disable import/no-unresolved */
 import axios from "axios";
 import React, { useState, useEffect, memo } from "react";
-import {
-  StyleSheet,
-  View,
-  ActivityIndicator,
-  TouchableOpacity,
-} from "react-native";
+import { View, ActivityIndicator } from "react-native";
 
-import { FavoriteButton } from "@/components/FavoriteButton";
-import { ThemedText } from "@/components/ThemedText";
-import PokemonImage from "@/components/index/PokemonImage";
-import { TypesContainer } from "@/components/index/TypesContainer";
-import useFavorites from "@/hooks/useFavorites";
+import { PokemonCard } from "@/components/common/PokemonCard";
+import { ThemedText } from "@/components/common/ThemedText";
 import { PokemonDetail } from "@/types/Pokemon.types";
-import { matchesSelectedTypes, formatPokemonName } from "@/utils/pokemonUtils";
-
-// Constants
-const ITEM_HEIGHT = 150;
+import { matchesSelectedTypes } from "@/utils/pokemonUtils";
 
 interface PokemonItemProps {
   pokemonUrl: string;
   openPokemonSheet: (pokemon: PokemonDetail) => void;
   selectedTypes: string[];
+  isClickable?: boolean;
+  showFavButtonAlways?: boolean;
 }
 
 const PokemonItem = memo(
-  ({ pokemonUrl, openPokemonSheet, selectedTypes }: PokemonItemProps) => {
+  ({
+    pokemonUrl,
+    openPokemonSheet,
+    selectedTypes,
+    isClickable = true,
+    showFavButtonAlways = true,
+  }: PokemonItemProps) => {
     const [pokemon, setPokemon] = useState<PokemonDetail | null>(null);
     const [error, setError] = useState<boolean>(false);
-    const { isFavorite } = useFavorites();
+    const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
       let isMounted = true;
 
       const fetchPokemonDetails = async () => {
         try {
+          setLoading(true);
           const response = await axios.get<PokemonDetail>(pokemonUrl);
           if (isMounted) {
             setPokemon(response.data);
@@ -45,6 +43,10 @@ const PokemonItem = memo(
           if (isMounted) {
             setError(true);
             console.error("Error fetching pokemon:", err);
+          }
+        } finally {
+          if (isMounted) {
+            setLoading(false);
           }
         }
       };
@@ -57,15 +59,29 @@ const PokemonItem = memo(
 
     if (error) {
       return (
-        <View style={styles.item}>
+        <View
+          style={{
+            flex: 1,
+            height: 150,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <ThemedText>Error loading Pokemon</ThemedText>
         </View>
       );
     }
 
-    if (!pokemon) {
+    if (loading || !pokemon) {
       return (
-        <View style={styles.item}>
+        <View
+          style={{
+            flex: 1,
+            height: 150,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <ActivityIndicator size="small" />
         </View>
       );
@@ -80,51 +96,18 @@ const PokemonItem = memo(
       return null;
     }
 
-    const showFavoriteButton = isFavorite(pokemon.id);
-    const displayName = formatPokemonName(pokemon.name);
-
     return (
-      <TouchableOpacity
-        style={styles.item}
-        onPress={() => openPokemonSheet(pokemon)}
-      >
-        <TypesContainer types={pokemon.types} size={20} position="topLeft" />
-        <PokemonImage uri={pokemon.sprites.front_default} />
-        {showFavoriteButton && (
-          <FavoriteButton
-            pokemonId={pokemon.id}
-            position="topRight"
-            size={25}
-            isClickable={false}
-          />
-        )}
-        <ThemedText style={styles.title}>{displayName}</ThemedText>
-      </TouchableOpacity>
+      <PokemonCard
+        pokemon={pokemon}
+        layout="grid"
+        showDetails={false}
+        isClickable={isClickable}
+        isFavButtonClickable={false}
+        showFavButtonAlways={showFavButtonAlways}
+        onPress={openPokemonSheet}
+      />
     );
   },
 );
-
-const styles = StyleSheet.create({
-  item: {
-    flex: 1,
-    height: ITEM_HEIGHT,
-    borderRadius: 10,
-    margin: 5,
-    padding: 10,
-    backgroundColor: "#f0f0f0",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.4,
-    shadowRadius: 2,
-    shadowOffset: { width: 3, height: 3 },
-  },
-  title: {
-    fontSize: 12,
-    fontFamily: "PokemonClassic",
-    color: "#000",
-    textAlign: "center",
-  },
-});
 
 export default PokemonItem;

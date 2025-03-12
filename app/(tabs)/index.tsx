@@ -20,8 +20,9 @@ import {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { ThemedSafeAreaView } from "@/components/ThemedSafeAreaView";
-import { ThemedText } from "@/components/ThemedText";
+import DebugButton from "@/components/common/DebugButton";
+import { ThemedSafeAreaView } from "@/components/common/ThemedSafeAreaView";
+import { ThemedText } from "@/components/common/ThemedText";
 import {
   ItemSortFilter,
   SortDirection,
@@ -29,30 +30,12 @@ import {
 import PokemonBottomSheet from "@/components/index/PokemonBottomSheet";
 import PokemonItem from "@/components/index/PokemonItem";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import useFavorites from "@/hooks/useFavorites";
 import usePokemonData from "@/hooks/usePokemonData";
+import { useFavoritesStore } from "@/stores/useFavoritesStore";
 import { PokemonDetail, PokemonResult } from "@/types/Pokemon.types";
 
 // Constants
 const NUM_COLUMNS = 2;
-
-const DebugButton = memo(({ pokemons }: { pokemons: PokemonResult[] }) => {
-  const { favorites } = useFavorites();
-
-  return (
-    <TouchableOpacity
-      style={styles.debugButton}
-      onPress={() => {
-        console.log("Pokemon data: ", JSON.stringify(pokemons, null, 2));
-        console.log();
-        console.log(pokemons);
-        console.log(`Favorites: ${favorites}`);
-      }}
-    >
-      <IconSymbol name="ladybug" size={30} color="#999" />
-    </TouchableOpacity>
-  );
-});
 
 export default function PokedexScreen() {
   const {
@@ -72,7 +55,8 @@ export default function PokedexScreen() {
   const [sortDirection, setSortDirection] = useState<SortDirection>(
     SortDirection.NONE,
   );
-  const { favorites } = useFavorites();
+  // TODO: Remove it later
+  const favorites = useFavoritesStore((state) => state.favorites);
 
   useEffect(() => {
     if (errorMessage) {
@@ -113,7 +97,17 @@ export default function PokedexScreen() {
 
   const handlePokemonPress = (pokemon: PokemonDetail) => {
     setSelectedPokemon(pokemon);
-    bottomSheetRef.current?.snapToIndex(2);
+  };
+
+  // TODO: Remove it later
+  const handleDebugPress = () => {
+    console.log("Pokemon data: ", JSON.stringify(pokemons, null, 2));
+    console.log();
+    console.log(pokemons);
+    console.log(`Favorites: ${JSON.stringify(favorites)}`);
+    console.log(`Selected types: ${JSON.stringify(selectedTypes)}`);
+    console.log(`Sort direction: ${sortDirection}`);
+    console.log(`Selected Pokemon: ${JSON.stringify(selectedPokemon?.id)}`);
   };
 
   const renderItem: ListRenderItem<PokemonResult> = useCallback(
@@ -125,6 +119,7 @@ export default function PokedexScreen() {
           pokemonUrl={item.url}
           openPokemonSheet={handlePokemonPress}
           selectedTypes={selectedTypes}
+          showFavButtonAlways={false}
         />
       );
     },
@@ -155,13 +150,15 @@ export default function PokedexScreen() {
     <SafeAreaProvider>
       <ThemedSafeAreaView style={styles.container}>
         <GestureHandlerRootView>
-          <DebugButton pokemons={pokemons} favorites={favorites} />
+          <DebugButton action={handleDebugPress} />
+          {/* Sort/Filter component */}
           <ItemSortFilter
             selectedTypes={selectedTypes}
             onTypeSelect={handleTypeSelect}
             sortDirection={sortDirection}
             onSortDirectionChange={handleSortDirectionChange}
           />
+          {/* Snackbar - TODO: use some pckg  */}
           {errorMessage && (
             <View style={styles.errorMessageContainer}>
               <ThemedText style={styles.errorMessageText}>
@@ -169,6 +166,7 @@ export default function PokedexScreen() {
               </ThemedText>
             </View>
           )}
+          {/* Pokemon list */}
           {pokemons.length === 0 && !initialLoader && !refreshing ? (
             <View style={styles.emptyContainer}>
               <ThemedText>No Pokémon found. Please try again later.</ThemedText>
@@ -191,6 +189,7 @@ export default function PokedexScreen() {
               onEndReachedThreshold={0.5}
             />
           )}
+          {/* Pokemon bottomsheet */}
           {selectedPokemon && (
             <PokemonBottomSheet
               sheetRef={bottomSheetRef}
@@ -212,20 +211,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 36,
     alignItems: "center",
-  },
-  debugButton: {
-    borderWidth: 1,
-    borderColor: "#000",
-    alignItems: "center",
-    justifyContent: "center",
-    width: 60,
-    height: 60,
-    position: "absolute",
-    zIndex: 1,
-    top: 15,
-    right: 20,
-    backgroundColor: "#fff",
-    borderRadius: 100,
   },
   errorMessageContainer: {
     padding: 10,

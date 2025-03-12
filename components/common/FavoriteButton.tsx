@@ -1,9 +1,9 @@
 /* eslint-disable import/no-unresolved */
 import { Star } from "lucide-react-native";
 import React from "react";
-import { TouchableOpacity, StyleSheet, View } from "react-native";
+import { TouchableOpacity, StyleSheet } from "react-native";
 
-import useFavorites from "@/hooks/useFavorites";
+import { useFavoritesStore } from "@/stores/useFavoritesStore";
 
 interface FavoriteButtonProps {
   pokemonId: number;
@@ -11,6 +11,7 @@ interface FavoriteButtonProps {
   style?: object;
   position?: "topRight" | "topLeft" | "row" | "custom";
   isClickable?: boolean;
+  showAlways?: boolean;
 }
 
 export const FavoriteButton = ({
@@ -19,9 +20,15 @@ export const FavoriteButton = ({
   style,
   position = "row",
   isClickable = true,
+  showAlways = true,
 }: FavoriteButtonProps) => {
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const isFav = isFavorite(pokemonId);
+  const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
+  const isFavorite = useFavoritesStore((state) => state.isFavorite(pokemonId));
+
+  // Hide button if it's not a favorite and shouldn't always be shown
+  if (!isFavorite && !showAlways) {
+    return null;
+  }
 
   const getContainerStyle = () => {
     switch (position) {
@@ -45,23 +52,14 @@ export const FavoriteButton = ({
   // Render either TouchableOpacity or View based on isClickable prop
   const containerStyle = [styles.favButton, getContainerStyle(), style];
 
-  if (!isClickable) {
-    return (
-      <View style={containerStyle}>
-        <Star
-          {...(isFav ? { fill: "#FFD700" } : {})}
-          strokeWidth={1}
-          size={size}
-          stroke="black"
-        />
-      </View>
-    );
-  }
-
   return (
-    <TouchableOpacity style={containerStyle} onPress={handlePress}>
+    <TouchableOpacity
+      style={containerStyle}
+      onPress={handlePress}
+      disabled={!isClickable}
+    >
       <Star
-        {...(isFav ? { fill: "#FFD700" } : {})}
+        {...(isFavorite ? { fill: "#FFD700" } : {})}
         strokeWidth={1}
         size={size}
         stroke="black"

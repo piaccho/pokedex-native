@@ -2,8 +2,8 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
 
-import { icons } from "@/assets/icons/icons";
-import { HapticTab } from "@/components/HapticTab";
+import { customIcons } from "@/assets/icons/customIcons";
+import { HapticTab } from "@/components/common/HapticTab";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -31,28 +31,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "PokéDex",
-          tabBarIcon: ({ color }) => icons.pokedex(color),
+          tabBarIcon: ({ color }) => customIcons.pokedex(color),
         }}
       />
       <Tabs.Screen
         name="favorites"
         options={{
           title: "Favorites",
-          tabBarIcon: ({ color }) => icons.favorites(color),
+          tabBarIcon: ({ color }) => customIcons.favorites(color),
         }}
       />
       <Tabs.Screen
         name="camera"
         options={{
           title: "PokéAR",
-          tabBarIcon: ({ color }) => icons.camera(color),
+          tabBarIcon: ({ color }) => customIcons.camera(color),
         }}
       />
       <Tabs.Screen
         name="map"
         options={{
           title: "PokéMap",
-          tabBarIcon: ({ color }) => icons.map(color),
+          tabBarIcon: ({ color }) => customIcons.map(color),
         }}
       />
     </Tabs>
