@@ -7,7 +7,6 @@ import { View, ActivityIndicator } from "react-native";
 import { PokemonCard } from "@/components/common/PokemonCard";
 import { ThemedText } from "@/components/common/ThemedText";
 import { PokemonDetail } from "@/types/Pokemon.types";
-import { matchesSelectedTypes } from "@/utils/pokemonUtils";
 
 interface PokemonItemProps {
   pokemonUrl: string;
@@ -15,6 +14,7 @@ interface PokemonItemProps {
   selectedTypes: string[];
   isClickable?: boolean;
   showFavButtonAlways?: boolean;
+  onTypesLoaded?: (url: string, types: string[]) => void;
 }
 
 const PokemonItem = memo(
@@ -24,6 +24,7 @@ const PokemonItem = memo(
     selectedTypes,
     isClickable = true,
     showFavButtonAlways = true,
+    onTypesLoaded,
   }: PokemonItemProps) => {
     const [pokemon, setPokemon] = useState<PokemonDetail | null>(null);
     const [error, setError] = useState<boolean>(false);
@@ -38,6 +39,12 @@ const PokemonItem = memo(
           const response = await axios.get<PokemonDetail>(pokemonUrl);
           if (isMounted) {
             setPokemon(response.data);
+
+            // Report loaded types to parent for filtering
+            if (onTypesLoaded) {
+              const types = response.data.types.map((t) => t.type.name);
+              onTypesLoaded(pokemonUrl, types);
+            }
           }
         } catch (err) {
           if (isMounted) {
@@ -55,7 +62,7 @@ const PokemonItem = memo(
       return () => {
         isMounted = false;
       };
-    }, [pokemonUrl]);
+    }, [pokemonUrl, onTypesLoaded]);
 
     if (error) {
       return (
@@ -85,15 +92,6 @@ const PokemonItem = memo(
           <ActivityIndicator size="small" />
         </View>
       );
-    }
-
-    // Filter by type if any types are selected
-    const pokemonTypes = pokemon.types.map((t) => t.type.name);
-    if (
-      selectedTypes.length > 0 &&
-      !matchesSelectedTypes(pokemonTypes, selectedTypes)
-    ) {
-      return null;
     }
 
     return (

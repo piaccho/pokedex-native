@@ -85,6 +85,5 @@ const styles = StyleSheet.create({
   },
   disabledFront: {
     backgroundColor: "#999", // Gray for disabled front
-    opacity: 0.5,
   },
 });

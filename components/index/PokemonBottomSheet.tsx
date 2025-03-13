@@ -12,7 +12,7 @@ import { PokemonDetail } from "@/types/Pokemon.types";
 
 interface PokemonBottomSheetProps {
   sheetRef: React.RefObject<BottomSheet>;
-  selectedPokemon: PokemonDetail;
+  selectedPokemon?: PokemonDetail;
   onClose?: () => void;
 }
 
@@ -49,7 +49,7 @@ export default function PokemonBottomSheet({
   return (
     <BottomSheet
       ref={sheetRef}
-      index={2}
+      index={-1}
       snapPoints={snapPoints}
       enableDynamicSizing={false}
       backdropComponent={renderBackdrop}

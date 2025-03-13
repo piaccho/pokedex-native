@@ -7,19 +7,24 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+import DebugButton from "@/components/common/DebugButton";
 import { PokemonCard } from "@/components/common/PokemonCard";
 import { ThemedSafeAreaView } from "@/components/common/ThemedSafeAreaView";
 import { ThemedText } from "@/components/common/ThemedText";
 import {
-  FavoritesNavigation,
+  FavoritesScreenOptions,
   NavigationStrategy,
-} from "@/components/favorites/FavoritesNavigation";
+} from "@/components/favorites/FavoritesScreenOptions";
+import { Colors } from "@/constants/Colors";
 import { useFavoritesStore } from "@/stores/useFavoritesStore";
 import { PokemonDetail } from "@/types/Pokemon.types";
 
 export default function FavoritePokemonsScreen() {
   const insets = useSafeAreaInsets();
   const favorites = useFavoritesStore((state) => state.favorites);
+  const clearAllFavorites = useFavoritesStore(
+    (state) => state.clearAllFavorites,
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentPokemon, setCurrentPokemon] = useState<PokemonDetail | null>(
     null,
@@ -67,6 +72,11 @@ export default function FavoritePokemonsScreen() {
             },
           ]}
         >
+          <DebugButton
+            action={function (): void {
+              clearAllFavorites();
+            }}
+          />
           {/* Pokemon Details */}
           <View
             style={[
@@ -99,7 +109,7 @@ export default function FavoritePokemonsScreen() {
 
           {/* Options */}
           <View style={[styles.itemContainer, styles.navigationContainer]}>
-            <FavoritesNavigation
+            <FavoritesScreenOptions
               currentIndex={currentIndex}
               onIndexChange={setCurrentIndex}
               strategy={navStrategy}
@@ -156,7 +166,7 @@ const styles = StyleSheet.create({
   },
   pokemonDetailsContainer: {
     flex: 5,
-    backgroundColor: "#fa4747",
+    backgroundColor: Colors.light.primary,
     borderRadius: 10,
     padding: 15,
     flexDirection: "row",

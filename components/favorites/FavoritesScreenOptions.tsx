@@ -1,15 +1,25 @@
 /* eslint-disable import/no-unresolved */
-import React from "react";
-import { StyleSheet, View } from "react-native";
-
-import { PushableButton } from "../common/PushableButton";
+import { Image } from "expo-image";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import { customIcons } from "@/assets/icons/customIcons";
+import { Colors } from "@/constants/Colors";
 import { useFavoritesStore } from "@/stores/useFavoritesStore";
 
-// TODO: Get these from useThemeColor
-const DISABLED_ICON_COLOR = "#ddd";
-const ENABLED_ICON_COLOR = "#fa4747";
+import { QuickSelectModal } from "./QuickSelectModal";
+import { PushableButton } from "../common/PushableButton";
+import { ThemedModal } from "../common/ThemedModal";
+import { ThemedText } from "../common/ThemedText";
+
+const ENABLED_ICON_COLOR = Colors.light.primary;
+const DISABLED_ICON_COLOR = Colors.light.disabled;
 
 // Define navigation strategies
 export enum NavigationStrategy {
@@ -17,22 +27,35 @@ export enum NavigationStrategy {
   CAROUSEL = "carousel",
 }
 
-interface FavoritesNavigationProps {
+interface FavoritesScreenOptionsProps {
   currentIndex: number;
   onIndexChange: (newIndex: number) => void;
   strategy: NavigationStrategy;
   totalItems: number;
 }
 
-export const FavoritesNavigation = ({
+export const FavoritesScreenOptions = ({
   currentIndex,
   onIndexChange,
   strategy = NavigationStrategy.DOUBLE_ENDED,
   totalItems,
-}: FavoritesNavigationProps) => {
-  const clearAllFavorites = useFavoritesStore(
-    (state) => state.clearAllFavorites,
+}: FavoritesScreenOptionsProps) => {
+  const favorites = useFavoritesStore((state) => state.favorites);
+  const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
+  const pokemonDetails = useFavoritesStore((state) => state.pokemonDetails);
+  const isLoading = useFavoritesStore((state) => state.isLoading);
+  const fetchAllFavoriteDetails = useFavoritesStore(
+    (state) => state.fetchAllFavoriteDetails,
   );
+
+  const [showQuickSelectModal, setShowQuickSelectModal] = useState(false);
+
+  // Fetch Pokemon details when the modal opens
+  useEffect(() => {
+    if (showQuickSelectModal) {
+      fetchAllFavoriteDetails();
+    }
+  }, [showQuickSelectModal, fetchAllFavoriteDetails]);
 
   // Navigation logic
   const handlePrevious = () => {
@@ -78,8 +101,21 @@ export const FavoritesNavigation = ({
     isNextDisabled ? DISABLED_ICON_COLOR : ENABLED_ICON_COLOR,
   );
 
-  const handleClearFavorites = () => {
-    clearAllFavorites();
+  // Replace the handleUnfavorite function with this:
+  const handleUnfavorite = () => {
+    if (totalItems === 0) return;
+
+    // Get the actual Pokémon ID from the favorites array using the current index
+    const pokemonId = favorites[currentIndex];
+    if (pokemonId) {
+      toggleFavorite(pokemonId);
+
+      // If this was the last Pokémon and we just unfavorited it,
+      // we need to adjust the current index
+      if (currentIndex >= favorites.length - 1 && currentIndex > 0) {
+        onIndexChange(currentIndex - 1);
+      }
+    }
   };
 
   const isAdditionalBtnsDisabled = totalItems === 0;
@@ -87,21 +123,27 @@ export const FavoritesNavigation = ({
     ? DISABLED_ICON_COLOR
     : ENABLED_ICON_COLOR;
 
-  const clearFavoritesIcon = customIcons.pixelTrashCan(additionalBtnsIconColor);
+  const unfavoriteIcon = customIcons.pixelTrashCan(additionalBtnsIconColor);
 
   const handleQuickSelect = () => {
-    // Quick select
+    setShowQuickSelectModal(true);
+  };
+
+  // Add handler for selecting a Pokemon
+  const handleSelectPokemon = (index: number) => {
+    onIndexChange(index);
+    setShowQuickSelectModal(false);
   };
 
   const quickSelectIcon = customIcons.pixelList(additionalBtnsIconColor);
 
   return (
     <View style={[styles.container, styles.containerShadow]}>
-      {/* Clear favorites pokemons */}
+      {/* Unfavorite pokemon button */}
       <PushableButton
-        onPress={handleClearFavorites}
+        onPress={handleUnfavorite}
         disabled={isAdditionalBtnsDisabled}
-        icon={clearFavoritesIcon}
+        icon={unfavoriteIcon}
         width={50}
         height={50}
       />
@@ -125,13 +167,26 @@ export const FavoritesNavigation = ({
         />
       </View>
 
-      {/* Quick select pokemon */}
+      {/* Quick select pokemon button */}
       <PushableButton
         onPress={handleQuickSelect}
         disabled={isAdditionalBtnsDisabled}
         icon={quickSelectIcon}
         width={50}
         height={50}
+      />
+
+      {/* Quick Select Modal */}
+      {/* Quick Select Modal */}
+      <QuickSelectModal
+        visible={showQuickSelectModal}
+        onClose={() => setShowQuickSelectModal(false)}
+        favorites={favorites}
+        pokemonDetails={pokemonDetails}
+        isLoading={isLoading}
+        currentIndex={currentIndex}
+        onSelectPokemon={handleSelectPokemon}
+        accentColor={ENABLED_ICON_COLOR}
       />
     </View>
   );
@@ -146,7 +201,6 @@ const styles = StyleSheet.create({
     gap: 8,
     borderRadius: 10,
     padding: 15,
-    paddingHorizontal: 20,
     backgroundColor: ENABLED_ICON_COLOR,
   },
   containerShadow: {
@@ -161,9 +215,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 8,
-  },
-  clearFavoritesBtn: {
-    backgroundColor: "#f0f0f0",
   },
   leftArrowBtn: {
     paddingRight: 15,

@@ -8,7 +8,7 @@ import { TYPE_IMAGES } from "@/assets/images/pokemon-types/typeImages";
 interface TypesContainerProps {
   types: { type: { name: string } }[];
   size?: number;
-  position?: "topRight" | "topLeft" | "row" | "custom";
+  position?: "topRight" | "topLeft" | "topMiddle" | "row" | "custom";
   style?: object;
 }
 
@@ -24,6 +24,8 @@ export const TypesContainer = ({
         return styles.topRightContainer;
       case "topLeft":
         return styles.topLeftContainer;
+      case "topMiddle":
+        return styles.topMiddleContainer;
       case "row":
         return styles.rowContainer;
       case "custom":
@@ -61,6 +63,16 @@ const styles = StyleSheet.create({
     left: 10,
     flexDirection: "row",
     justifyContent: "flex-start",
+    gap: 4,
+  },
+  topMiddleContainer: {
+    position: "absolute",
+    top: 10,
+    left: 0,
+    right: 0,
+    marginInline: "auto",
+    flexDirection: "row",
+    justifyContent: "center",
     gap: 4,
   },
   rowContainer: {

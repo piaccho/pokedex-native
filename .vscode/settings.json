@@ -4,6 +4,7 @@
     "favorited",
     "favoriting",
     "gorhom",
+    "partialize",
     "pikachu",
     "Poké",
     "Pokedex",
@@ -12,6 +13,7 @@
     "Pressable",
     "pushable",
     "redash",
-    "Subviews"
+    "Subviews",
+    "unfavorited"
   ]
 }

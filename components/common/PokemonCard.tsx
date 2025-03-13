@@ -169,18 +169,20 @@ export const PokemonCard = ({
       <TypesContainer
         types={pokemon.types}
         size={layout === "grid" ? 20 : 40}
-        position={layout === "detail" ? "topLeft" : "topLeft"}
+        position={layout === "favorite" ? "topMiddle" : "topLeft"}
         style={layout === "detail" ? styles.detailTypesContainer : undefined}
       />
 
-      <FavoriteButton
-        pokemonId={pokemon.id}
-        position={layout === "detail" ? "topRight" : "topRight"}
-        size={layout === "grid" ? 25 : 40}
-        isClickable={isFavButtonClickable}
-        showAlways={showFavButtonAlways}
-        style={layout === "detail" ? styles.detailFavButton : undefined}
-      />
+      {layout !== "favorite" && (
+        <FavoriteButton
+          pokemonId={pokemon.id}
+          position={layout === "detail" ? "topRight" : "topRight"}
+          size={layout === "grid" ? 25 : 40}
+          isClickable={isFavButtonClickable}
+          showAlways={showFavButtonAlways}
+          style={layout === "detail" ? styles.detailFavButton : undefined}
+        />
+      )}
 
       {/* Pokemon Image */}
       <Image
