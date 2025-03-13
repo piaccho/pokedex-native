@@ -63,6 +63,9 @@ export default function PokedexScreen() {
   const handlePokemonPress = useCallback((pokemon: PokemonDetail) => {
     setSelectedPokemon(pokemon);
   }, []);
+  const handleBottomSheetClose = useCallback(() => {
+    setSelectedPokemon(null);
+  }, []);
 
   if (initialLoader) {
     return (
@@ -107,6 +110,7 @@ export default function PokedexScreen() {
             <PokemonBottomSheet
               sheetRef={bottomSheetRef}
               selectedPokemon={selectedPokemon}
+              onClose={handleBottomSheetClose}
             />
           )}
         </GestureHandlerRootView>

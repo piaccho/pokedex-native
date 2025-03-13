@@ -23,7 +23,8 @@ export const FavoriteButton = ({
   showAlways = true,
 }: FavoriteButtonProps) => {
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
-  const isFavorite = useFavoritesStore((state) => state.isFavorite(pokemonId));
+  const favorites = useFavoritesStore((state) => state.favorites);
+  const isFavorite = favorites.includes(pokemonId);
 
   // Hide button if it's not a favorite and shouldn't always be shown
   if (!isFavorite && !showAlways) {

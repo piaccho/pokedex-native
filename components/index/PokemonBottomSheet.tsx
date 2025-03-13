@@ -8,6 +8,7 @@ import React, { useCallback, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { PokemonCard } from "@/components/common/PokemonCard";
+import { useFavoritesStore } from "@/stores/useFavoritesStore";
 import { PokemonDetail } from "@/types/Pokemon.types";
 
 interface PokemonBottomSheetProps {
@@ -21,6 +22,12 @@ export default function PokemonBottomSheet({
   selectedPokemon,
   onClose,
 }: PokemonBottomSheetProps) {
+  // Subscribe to favorites to force re-render when favorites change
+  const favorites = useFavoritesStore((state) => state.favorites);
+  const isFavorite = selectedPokemon
+    ? favorites.includes(selectedPokemon.id)
+    : false;
+
   const snapPoints = useMemo(() => ["25%", "50%", "90%"], []);
 
   const renderBackdrop = useCallback(
@@ -64,7 +71,7 @@ export default function PokemonBottomSheet({
               layout="detail"
               showDetails
               isClickable={false}
-              key={`pokemon-detail-${selectedPokemon.id}`}
+              key={`pokemon-detail-${selectedPokemon.id}-${isFavorite}`}
             />
           )}
         </View>

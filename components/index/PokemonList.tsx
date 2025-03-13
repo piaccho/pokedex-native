@@ -8,8 +8,9 @@ import {
   StyleSheet,
 } from "react-native";
 
+import PokemonItem from "../common/PokemonItem";
+
 import { ThemedText } from "@/components/common/ThemedText";
-import PokemonItem from "@/components/index/PokemonItem";
 import { PokemonConstants } from "@/constants/PokemonConstants";
 import { PokemonDetail, PokemonResult } from "@/types/Pokemon.types";
 

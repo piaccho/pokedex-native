@@ -34,10 +34,6 @@ export const useFavoritesStore = create<FavoritesState>()(
           const { favorites } = get();
           const isCurrentlyFavorite = favorites.includes(pokemonId);
 
-          console.log(
-            `Toggling favorite for pokemon ${pokemonId}, current status: ${isCurrentlyFavorite}`,
-          );
-
           if (isCurrentlyFavorite) {
             // If it's a favorite, remove it
             set({ favorites: favorites.filter((id) => id !== pokemonId) });
@@ -45,6 +41,10 @@ export const useFavoritesStore = create<FavoritesState>()(
             // If it's not a favorite, add it
             set({ favorites: [...favorites, pokemonId] });
           }
+
+          console.log(
+            `Toggled favorite for pokemon ${pokemonId} from ${isCurrentlyFavorite} to ${!isCurrentlyFavorite}`,
+          );
         } catch (err) {
           console.error("Error toggling favorite:", err);
           set({ error: "Failed to toggle favorite" });

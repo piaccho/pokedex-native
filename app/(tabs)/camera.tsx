@@ -16,15 +16,26 @@ export default function PokemonCameraScreen() {
   const device = useCameraDevice("back");
   const { hasPermission } = useCameraPermission();
 
-  if (!hasPermission) return <PermissionsView />;
-  if (device == null) return <NoCameraDeviceError />;
   return (
     <SafeAreaProvider>
-      <ThemedSafeAreaView>
-        <GestureHandlerRootView>
-          <Camera style={StyleSheet.absoluteFill} device={device} isActive />
+      <ThemedSafeAreaView style={styles.container}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          {!hasPermission ? (
+            <PermissionsView />
+          ) : device == null ? (
+            <NoCameraDeviceError />
+          ) : (
+            <Camera style={StyleSheet.absoluteFill} device={device} isActive />
+          )}
         </GestureHandlerRootView>
       </ThemedSafeAreaView>
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 10,
+  },
+});

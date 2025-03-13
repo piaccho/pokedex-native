@@ -25,6 +25,10 @@ export default function TabLayout() {
           },
           default: {},
         }),
+        tabBarLabelStyle: {
+          fontFamily: "PokemonClassic",
+          fontSize: 8,
+        },
       }}
     >
       <Tabs.Screen

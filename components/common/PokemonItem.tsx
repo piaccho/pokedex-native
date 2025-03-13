@@ -4,9 +4,10 @@ import axios from "axios";
 import React, { useState, useEffect, memo } from "react";
 import { View, ActivityIndicator } from "react-native";
 
-import { PokemonCard } from "@/components/common/PokemonCard";
 import { ThemedText } from "@/components/common/ThemedText";
 import { PokemonDetail } from "@/types/Pokemon.types";
+
+import { PokemonCard } from "@/components/common/PokemonCard";
 
 interface PokemonItemProps {
   pokemonUrl: string;
