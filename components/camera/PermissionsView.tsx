@@ -1,22 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Linking, StyleSheet, View, Text } from "react-native";
+import { Linking, StyleSheet, View, TouchableOpacity } from "react-native";
 import type { CameraPermissionStatus } from "react-native-vision-camera";
 import { Camera } from "react-native-vision-camera";
+
+import { ThemedText } from "@/components/common/ThemedText";
+import { Colors } from "@/constants/Colors";
 
 export function PermissionsView(): React.ReactElement {
   const [cameraPermissionStatus, setCameraPermissionStatus] =
     useState<CameraPermissionStatus>("not-determined");
-  const [microphonePermissionStatus, setMicrophonePermissionStatus] =
-    useState<CameraPermissionStatus>("not-determined");
-
-  const requestMicrophonePermission = useCallback(async () => {
-    console.log("Requesting microphone permission...");
-    const permission = await Camera.requestMicrophonePermission();
-    console.log(`Microphone permission status: ${permission}`);
-
-    if (permission === "denied") await Linking.openSettings();
-    setMicrophonePermissionStatus(permission);
-  }, []);
 
   const requestCameraPermission = useCallback(async () => {
     console.log("Requesting camera permission...");
@@ -28,37 +20,27 @@ export function PermissionsView(): React.ReactElement {
   }, []);
 
   useEffect(() => {
-    if (
-      cameraPermissionStatus === "granted" &&
-      microphonePermissionStatus === "granted"
-    )
-      console.log(`Both permissions granted!`);
-  }, [cameraPermissionStatus, microphonePermissionStatus]);
+    if (cameraPermissionStatus === "granted")
+      console.log(`Camera permissions granted!`);
+  }, [cameraPermissionStatus]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.welcome}>Welcome to{"\n"}Vision Camera.</Text>
+    <View style={[styles.welcomeContainer, styles.containerShadow]}>
+      <ThemedText style={styles.welcomeText}>Welcome to PokéAR</ThemedText>
+
       <View style={styles.permissionsContainer}>
         {cameraPermissionStatus !== "granted" && (
-          <Text style={styles.permissionText}>
-            Vision Camera needs{" "}
-            <Text style={styles.bold}>Camera permission</Text>.{" "}
-            <Text style={styles.hyperlink} onPress={requestCameraPermission}>
-              Grant
-            </Text>
-          </Text>
-        )}
-        {microphonePermissionStatus !== "granted" && (
-          <Text style={styles.permissionText}>
-            Vision Camera needs{" "}
-            <Text style={styles.bold}>Microphone permission</Text>.{" "}
-            <Text
-              style={styles.hyperlink}
-              onPress={requestMicrophonePermission}
+          <View style={styles.permissionRow}>
+            <ThemedText style={styles.permissionText}>
+              Camera permission required
+            </ThemedText>
+            <TouchableOpacity
+              style={[styles.grantButton, styles.containerShadow]}
+              onPress={requestCameraPermission}
             >
-              Grant
-            </Text>
-          </Text>
+              <ThemedText style={styles.buttonText}>Grant</ThemedText>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
     </View>
@@ -66,30 +48,59 @@ export function PermissionsView(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  welcome: {
-    fontSize: 38,
-    fontWeight: "bold",
-    maxWidth: "80%",
-  },
-  banner: {
-    position: "absolute",
-    opacity: 0.4,
-    bottom: 0,
-    left: 0,
-  },
   container: {
     flex: 1,
-    backgroundColor: "white",
   },
-  permissionsContainer: {},
+  contentContainer: {
+    flex: 1,
+    marginHorizontal: 10,
+    borderRadius: 10,
+    padding: 10,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  welcomeContainer: {
+    width: "100%",
+    backgroundColor: Colors.light.primary,
+    borderRadius: 10,
+    padding: 30,
+    gap: 30,
+  },
+  welcomeText: {
+    fontSize: 24,
+    fontFamily: "PokemonClassic",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  permissionsContainer: {
+    gap: 20,
+  },
+  permissionRow: {
+    alignItems: "center",
+    gap: 15,
+  },
   permissionText: {
-    fontSize: 17,
+    fontFamily: "PokemonClassic",
+    fontSize: 16,
+    textAlign: "center",
   },
-  hyperlink: {
-    color: "#007aff",
-    fontWeight: "bold",
+  grantButton: {
+    backgroundColor: Colors.light.background,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
   },
-  bold: {
-    fontWeight: "bold",
+  buttonText: {
+    fontFamily: "PokemonClassic",
+    fontSize: 14,
+    textAlign: "center",
+    color: Colors.light.primary,
+  },
+  containerShadow: {
+    shadowColor: "#000",
+    shadowOpacity: 0.4,
+    shadowRadius: 2,
+    shadowOffset: { width: 3, height: 3 },
   },
 });

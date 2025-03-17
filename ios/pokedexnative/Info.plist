@@ -85,5 +85,10 @@
     <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
+    <!-- @react-native-camera-roll/camera-roll -->
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>$(PRODUCT_NAME) needs access to your photo library to save taken photos and displays them.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>$(PRODUCT_NAME) needs access to your photo library to save taken photos and displays them.</string>
   </dict>
 </plist>

@@ -26,9 +26,9 @@ export const ThemedModal = ({
 }: ThemedModalProps) => {
   return (
     <Modal
+      transparent
       visible={visible}
       animationType="slide"
-      transparent
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>

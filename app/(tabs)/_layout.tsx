@@ -35,13 +35,13 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "PokéDex",
-          tabBarIcon: ({ color }) => customIcons.pokedex(color),
+          tabBarIcon: ({ color }) => customIcons.pokedex(color, 28),
         }}
       />
       <Tabs.Screen
-        name="favorites"
+        name="favorite"
         options={{
-          title: "Favorites",
+          title: "Favorite",
           tabBarIcon: ({ color }) => customIcons.favorites(color),
         }}
       />
@@ -56,6 +56,13 @@ export default function TabLayout() {
         name="map"
         options={{
           title: "PokéMap",
+          tabBarIcon: ({ color }) => customIcons.map(color),
+        }}
+      />
+      <Tabs.Screen
+        name="album"
+        options={{
+          title: "AlbumTest",
           tabBarIcon: ({ color }) => customIcons.map(color),
         }}
       />

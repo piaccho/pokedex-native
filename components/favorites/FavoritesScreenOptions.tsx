@@ -1,13 +1,6 @@
 /* eslint-disable import/no-unresolved */
-import { Image } from "expo-image";
 import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { customIcons } from "@/assets/icons/customIcons";
 import { Colors } from "@/constants/Colors";
@@ -15,8 +8,6 @@ import { useFavoritesStore } from "@/stores/useFavoritesStore";
 
 import { QuickSelectModal } from "./QuickSelectModal";
 import { PushableButton } from "../common/PushableButton";
-import { ThemedModal } from "../common/ThemedModal";
-import { ThemedText } from "../common/ThemedText";
 
 const ENABLED_ICON_COLOR = Colors.light.primary;
 const DISABLED_ICON_COLOR = Colors.light.disabled;
@@ -176,7 +167,6 @@ export const FavoritesScreenOptions = ({
         height={50}
       />
 
-      {/* Quick Select Modal */}
       {/* Quick Select Modal */}
       <QuickSelectModal
         visible={showQuickSelectModal}
