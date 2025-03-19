@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import ArIcon from "@/assets/icons/ar.svg";
@@ -10,14 +9,17 @@ import PixelTrashCan from "@/assets/icons/pixel-trash-can.svg";
 
 type Orientation = "up" | "down" | "left" | "right";
 
+// TODO: Remove it, just use the icons directly. Don't use MaterialIcons, use the Lucide icons instead.
 export const customIcons = {
   pokedex: (color: string, size: number) => (
     <PokemonIcon width={size} height={size} fill={color} />
   ),
-  favorites: (color: string) => (
+  favorites: (color: string, size: number) => (
     <MaterialIcons name="star" size={26} color={color} />
   ),
-  camera: (color: string) => <ArIcon fill={color} />,
+  camera: (color: string, size: number) => (
+    <ArIcon fill={color} width={size} height={size} />
+  ),
   map: (color: string) => (
     <MaterialIcons name="pin-drop" size={28} color={color} />
   ),

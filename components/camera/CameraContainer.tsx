@@ -1,5 +1,7 @@
-/* eslint-disable import/no-unresolved */
 import { useIsFocused } from "@react-navigation/native";
+import axios from "axios";
+import { Image } from "expo-image";
+import * as MediaLibrary from "expo-media-library";
 import { Images } from "lucide-react-native";
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import {
@@ -9,6 +11,7 @@ import {
   AppState,
   LayoutChangeEvent,
 } from "react-native";
+import ViewShot, { captureRef } from "react-native-view-shot";
 import {
   Camera,
   CameraDevice,
@@ -21,14 +24,15 @@ import {
 } from "react-native-vision-camera-face-detector";
 import { Worklets } from "react-native-worklets-core";
 
-import DebugButton from "../common/DebugButton";
-
 import { customIcons } from "@/assets/icons/customIcons";
 import BulbazaurImage from "@/assets/images/bulbazaur.svg";
+import { AlbumModal } from "@/components/camera/AlbumModal";
 import { TextBubble } from "@/components/camera/TextBubble";
+import { PokemonSelectorModal } from "@/components/common/PokemonSelectorModal";
 import { ThemedText } from "@/components/common/ThemedText";
 import { CameraConstants } from "@/constants/CameraConstants";
 import { Colors } from "@/constants/Colors";
+import { PokemonDetail } from "@/types/Pokemon.types";
 
 type PokeStickerPosition = {
   x: number;
@@ -36,10 +40,17 @@ type PokeStickerPosition = {
   size?: number; // Optional size based on face size
 };
 
-const PokeStickersRenderer: React.FC<{
+interface PokeStickersRendererProps {
   pokeStickerPositions: PokeStickerPosition[];
   containerWidth: number;
-}> = ({ pokeStickerPositions, containerWidth }) => {
+  pokemonImageUri: string | null;
+}
+
+const PokeStickersRenderer: React.FC<PokeStickersRendererProps> = ({
+  pokeStickerPositions,
+  containerWidth,
+  pokemonImageUri,
+}: PokeStickersRendererProps) => {
   // Calculate a reasonable default size based on container width
   const defaultSize = containerWidth * 0.2; // 20% of container width
 
@@ -60,18 +71,21 @@ const PokeStickersRenderer: React.FC<{
               },
             ]}
           >
-            <BulbazaurImage
-              width={size}
-              height={size}
-              // style={styles.pokemonSticker}
-            />
+            {pokemonImageUri ? (
+              <Image
+                source={{ uri: pokemonImageUri }}
+                style={{ width: size, height: size }}
+                contentFit="contain"
+              />
+            ) : (
+              <BulbazaurImage width={size} height={size} />
+            )}
           </View>
         );
       })}
     </>
   );
 };
-
 interface CameraContainerProps {
   device: CameraDevice;
 }
@@ -79,9 +93,47 @@ interface CameraContainerProps {
 export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
   const camera = useRef<Camera>(null);
 
+  const [showAlbumModal, setShowAlbumModal] = useState(false);
   const isFocused = useIsFocused();
   const appState = useRef(AppState.currentState);
   const [appStateVisible, setAppStateVisible] = useState(appState.current);
+
+  const [showPokemonSelector, setShowPokemonSelector] = useState(false);
+  const [selectedPokemonId, setSelectedPokemonId] = useState<number | null>(
+    null,
+  );
+  const [pokemonDetails, setPokemonDetails] = useState<PokemonDetail | null>(
+    null,
+  );
+
+  // Fetch Pokemon details when selectedPokemonId changes
+  useEffect(() => {
+    const fetchPokemonDetails = async () => {
+      if (!selectedPokemonId) return;
+
+      try {
+        const response = await axios.get(
+          `https://pokeapi.co/api/v2/pokemon/${selectedPokemonId}`,
+        );
+        setPokemonDetails(response.data);
+      } catch (error) {
+        console.error("Error fetching Pokemon details:", error);
+      }
+
+      // If not in store, fetch directly
+      try {
+        const response = await axios.get(
+          `https://pokeapi.co/api/v2/pokemon/${selectedPokemonId}`,
+        );
+        setPokemonDetails(response.data);
+      } catch (error) {
+        console.error("Error fetching Pokemon details:", error);
+      }
+    };
+
+    fetchPokemonDetails();
+  }, [selectedPokemonId]);
+
   const isCameraActive = isFocused && appStateVisible === "active";
   const [containerDimensions, setContainerDimensions] = useState({
     width: 0,
@@ -128,6 +180,7 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
   const [faceDetected, setFaceDetected] = useState(false);
   const [showBubble, setShowBubble] = useState(true);
   const [isFrameProcessorEnabled, setIsFrameProcessorEnabled] = useState(true);
+  const captureContainerRef = useRef<View>(null);
 
   const handleDetectedFaces = Worklets.createRunOnJS(
     (faces: Face[], frameWidth: number, frameHeight: number) => {
@@ -171,32 +224,100 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
     [handleDetectedFaces],
   );
 
-  // const [albums, setAlbums] = useState(null);
-  // const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
+  const capturePhoto = useCallback(async () => {
+    const photo = await camera.current?.takePhoto();
+    console.log("Photo captured:", photo);
+    return photo?.path;
+  }, []);
 
-  // const savePhoto = async () => {
-  //   if (permissionResponse.status !== "granted") {
-  //     await requestPermission();
-  //   }
-  //   const fetchedAlbums = await MediaLibrary.getAlbumsAsync({
-  //     includeSmartAlbums: true,
-  //   });
-  //   setAlbums(fetchedAlbums);
-  // };
+  const captureScreen = useCallback(async () => {
+    // Capture the screen content
+    let captureUri;
+    try {
+      captureUri = await captureRef(camera, {
+        format: "jpg",
+        quality: 0.8,
+      });
+    } catch (error) {
+      console.error("Error capturing photo:", error);
+      return;
+    }
+    console.log("Capture URI:", captureUri);
+    return captureUri;
+  }, []);
 
   const handleCapture = useCallback(async () => {
     console.log("Capture!");
     setShowBubble((prevState) => !prevState); // Toggle bubble to trigger animation
-    const photo = await camera.current?.takePhoto();
+
+    const captureUri = await capturePhoto();
+    if (!captureUri) {
+      console.error("Error capturing photo");
+      return;
+    }
+
+    // Save image to camera roll
+    const ALBUM_NAME = "PokeDexNative";
+
+    // Check and request permissions
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+    if (status !== "granted") {
+      console.log("Media library permission denied");
+      return;
+    }
+
+    try {
+      // Save the image to the media library
+      const asset = await MediaLibrary.createAssetAsync(captureUri);
+      console.log("Image saved to media library:", asset);
+
+      // Try to find existing album
+      let album = await MediaLibrary.getAlbumAsync(ALBUM_NAME);
+
+      // Create album if it doesn't exist
+      if (!album) {
+        album = await MediaLibrary.createAlbumAsync(ALBUM_NAME, asset);
+        console.log(`Created new album: ${ALBUM_NAME}`);
+      } else {
+        // Add image to existing album
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album);
+        console.log(`Added image to existing album: ${ALBUM_NAME}`);
+      }
+
+      console.log("PokéSelfie saved successfully!");
+    } catch (error) {
+      console.error("Error saving image to gallery:", error);
+    }
   }, []);
 
-  const handleViewGallery = useCallback(() => {
-    console.log("View Gallery!");
+  const handleOpenGallery = useCallback(() => {
+    toggleFrameProcessor();
+    setShowAlbumModal(true);
+  }, []);
+
+  const handleCloseGallery = useCallback(() => {
+    toggleFrameProcessor();
+    setShowAlbumModal(false);
   }, []);
 
   const handleSelectPokemon = useCallback(() => {
-    console.log("Select Pokemon!");
+    toggleFrameProcessor();
+    setShowPokemonSelector(true);
   }, []);
+
+  const handleClosePokemonSelector = useCallback(() => {
+    toggleFrameProcessor();
+    setShowPokemonSelector(false);
+  }, []);
+
+  const handlePokemonSelected = useCallback((pokemonId: number) => {
+    setSelectedPokemonId(pokemonId);
+    console.log(`Selected Pokemon ID: ${pokemonId}`);
+  }, []);
+
+  // Get the pokemon image URI for the sticker
+  const pokemonImageUri =
+    pokemonDetails?.sprites.other.dream_world.front_default || null;
 
   const toggleFrameProcessor = useCallback(() => {
     setIsFrameProcessorEnabled((prev) => !prev);
@@ -204,19 +325,30 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
 
   return (
     <View style={styles.container} onLayout={handleContainerLayout}>
-      <DebugButton
-        action={() =>
-          console.log(
-            `Current container size: ${containerDimensions.width}x${containerDimensions.height}`,
-          )
-        }
+      {/* Album Modal */}
+      <AlbumModal
+        visible={showAlbumModal}
+        onClose={handleCloseGallery}
+        containerWidth={containerDimensions.width}
+        containerHeight={containerDimensions.height}
       />
-      {/* Camera takes most of the space */}
+
+      {/* Pokemon Image Selector Modal */}
+      <PokemonSelectorModal
+        visible={showPokemonSelector}
+        onClose={handleClosePokemonSelector}
+        onSelectPokemon={handlePokemonSelected}
+        title="Select Pokémon"
+        currentPokemonId={selectedPokemonId || undefined}
+      />
+
+      {/* Camera */}
       <View style={[styles.cameraContainer, styles.containerShadow]}>
-        {faceDetected && (
+        {isFrameProcessorEnabled && faceDetected && (
           <PokeStickersRenderer
             pokeStickerPositions={pokeStickerPositions}
             containerWidth={containerDimensions.width}
+            pokemonImageUri={pokemonImageUri}
           />
         )}
         <Camera
@@ -232,7 +364,7 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
       {/* Camera controls overlay */}
       <View style={styles.controlsOverlay}>
         {/* View Gallery Button */}
-        <TouchableOpacity onPress={handleViewGallery}>
+        <TouchableOpacity onPress={handleOpenGallery}>
           <Images color="white" size={35} />
         </TouchableOpacity>
 
@@ -249,10 +381,17 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
           {customIcons.pokedex("white", 35)}
         </TouchableOpacity>
 
-        {/* Frame processor toggle button */}
-        <TouchableOpacity onPress={toggleFrameProcessor}>
-          {customIcons.camera("white")}
-        </TouchableOpacity>
+        {__DEV__ && (
+          // Debug button to toggle frame processor
+          <TouchableOpacity onPress={toggleFrameProcessor}>
+            <View style={styles.iconContainer}>
+              {customIcons.camera("white", 30)}
+              {!isFrameProcessorEnabled && (
+                <View style={styles.disabledIconLine} />
+              )}
+            </View>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Title bar */}
@@ -356,5 +495,24 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
+  },
+  // frameProcessorEnabled icon
+  iconContainer: {
+    position: "relative",
+    width: 35,
+    height: 35,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  disabledIconLine: {
+    position: "absolute",
+    width: 48,
+    height: 3,
+    backgroundColor: "#fff",
+    borderRadius: 1.5,
+    transform: [{ rotate: "45deg" }],
+    top: "50%",
+    marginTop: -1.5,
   },
 });

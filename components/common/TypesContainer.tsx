@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import { Image, ImageStyle } from "expo-image";
 import React from "react";
 import { View, StyleSheet } from "react-native";

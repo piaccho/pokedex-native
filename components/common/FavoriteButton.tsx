@@ -1,8 +1,8 @@
-/* eslint-disable import/no-unresolved */
-import { Star } from "lucide-react-native";
+import { Image } from "expo-image";
 import React from "react";
 import { TouchableOpacity, StyleSheet } from "react-native";
 
+import PixelStar from "@/assets/images/pixel-star.svg";
 import { useFavoritesStore } from "@/stores/useFavoritesStore";
 
 interface FavoriteButtonProps {
@@ -51,7 +51,12 @@ export const FavoriteButton = ({
   };
 
   // Render either TouchableOpacity or View based on isClickable prop
-  const containerStyle = [styles.favButton, getContainerStyle(), style];
+  const containerStyle = [
+    styles.favButton,
+    getContainerStyle(),
+    style,
+    { width: size, height: size },
+  ];
 
   return (
     <TouchableOpacity
@@ -59,12 +64,15 @@ export const FavoriteButton = ({
       onPress={handlePress}
       disabled={!isClickable}
     >
-      <Star
-        {...(isFavorite ? { fill: "#FFD700" } : {})}
-        strokeWidth={1}
-        size={size}
-        stroke="black"
-      />
+      {isFavorite ? (
+        // <PixelStarFilled width={size} height={size} fill="#FFD700" />
+        <Image
+          source={require("@/assets/images/pixel-star-filled-gold.png")}
+          style={{ width: size, height: size }}
+        />
+      ) : (
+        <PixelStar width={size} height={size} />
+      )}
     </TouchableOpacity>
   );
 };

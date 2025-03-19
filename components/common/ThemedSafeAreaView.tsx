@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import { SafeAreaView, type ViewProps } from "react-native";
 
 import { useThemeColor } from "@/hooks/useThemeColor";

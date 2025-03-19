@@ -1,12 +1,11 @@
-/* eslint-disable import/no-unresolved */
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { customIcons } from "@/assets/icons/customIcons";
 import { Colors } from "@/constants/Colors";
 import { useFavoritesStore } from "@/stores/useFavoritesStore";
 
-import { QuickSelectModal } from "./QuickSelectModal";
+import { PokemonSelectorModal } from "../common/PokemonSelectorModal";
 import { PushableButton } from "../common/PushableButton";
 
 const ENABLED_ICON_COLOR = Colors.light.primary;
@@ -33,20 +32,9 @@ export const FavoritesScreenOptions = ({
 }: FavoritesScreenOptionsProps) => {
   const favorites = useFavoritesStore((state) => state.favorites);
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
-  const pokemonDetails = useFavoritesStore((state) => state.pokemonDetails);
-  const isLoading = useFavoritesStore((state) => state.isLoading);
-  const fetchAllFavoriteDetails = useFavoritesStore(
-    (state) => state.fetchAllFavoriteDetails,
-  );
 
-  const [showQuickSelectModal, setShowQuickSelectModal] = useState(false);
-
-  // Fetch Pokemon details when the modal opens
-  useEffect(() => {
-    if (showQuickSelectModal) {
-      fetchAllFavoriteDetails();
-    }
-  }, [showQuickSelectModal, fetchAllFavoriteDetails]);
+  const [showPokemonSelectorModal, setShowPokemonSelectorModal] =
+    useState(false);
 
   // Navigation logic
   const handlePrevious = () => {
@@ -117,13 +105,16 @@ export const FavoritesScreenOptions = ({
   const unfavoriteIcon = customIcons.pixelTrashCan(additionalBtnsIconColor);
 
   const handleQuickSelect = () => {
-    setShowQuickSelectModal(true);
+    setShowPokemonSelectorModal(true);
   };
 
-  // Add handler for selecting a Pokemon
-  const handleSelectPokemon = (index: number) => {
-    onIndexChange(index);
-    setShowQuickSelectModal(false);
+  const handleSelectPokemon = (pokemonId: number) => {
+    // Find the index of this Pokemon ID in favorites array
+    const index = favorites.findIndex((id) => id === pokemonId);
+    if (index >= 0) {
+      onIndexChange(index);
+    }
+    setShowPokemonSelectorModal(false);
   };
 
   const quickSelectIcon = customIcons.pixelList(additionalBtnsIconColor);
@@ -167,15 +158,13 @@ export const FavoritesScreenOptions = ({
         height={50}
       />
 
-      {/* Quick Select Modal */}
-      <QuickSelectModal
-        visible={showQuickSelectModal}
-        onClose={() => setShowQuickSelectModal(false)}
-        favorites={favorites}
-        pokemonDetails={pokemonDetails}
-        isLoading={isLoading}
-        currentIndex={currentIndex}
+      {/* Using the unified PokemonSelectorModal component */}
+      <PokemonSelectorModal
+        visible={showPokemonSelectorModal}
+        onClose={() => setShowPokemonSelectorModal(false)}
         onSelectPokemon={handleSelectPokemon}
+        title="Select Pokemon"
+        currentPokemonId={favorites[currentIndex]}
         accentColor={ENABLED_ICON_COLOR}
       />
     </View>

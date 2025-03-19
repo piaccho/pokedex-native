@@ -1,13 +1,12 @@
-/* eslint-disable import/no-unresolved */
 import { Image } from "expo-image";
 import { Filter } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import { TouchableOpacity, StyleSheet, View, ScrollView } from "react-native";
 
+import { TYPE_IMAGES } from "@/assets/images/pokemon-types/typeImages";
+
 import { ThemedModal } from "../common/ThemedModal";
 import { ThemedText } from "../common/ThemedText";
-
-import { TYPE_IMAGES } from "@/assets/images/pokemon-types/typeImages";
 
 interface FilterModalProps {
   selectedTypes: string[];

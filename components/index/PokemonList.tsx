@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import React, { useCallback } from "react";
 import {
@@ -8,11 +7,11 @@ import {
   StyleSheet,
 } from "react-native";
 
-import PokemonItem from "../common/PokemonItem";
-
 import { ThemedText } from "@/components/common/ThemedText";
 import { PokemonConstants } from "@/constants/PokemonConstants";
 import { PokemonDetail, PokemonResult } from "@/types/Pokemon.types";
+
+import PokemonItem from "../common/PokemonItem";
 
 interface PokemonListProps {
   pokemons: PokemonResult[];

@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import React from "react";
 import { View, StyleSheet } from "react-native";
 
@@ -11,7 +10,7 @@ import {
 interface PokemonSortFilterSystemProps {
   selectedTypes: string[];
   sortDirection: SortDirection;
-  errorMessage?: string | null;
+  errorMessage?: string;
   onTypeSelect: (type: string) => void;
   onSortDirectionChange: (direction: SortDirection) => void;
   onApplyFilters: (types: string[]) => void;

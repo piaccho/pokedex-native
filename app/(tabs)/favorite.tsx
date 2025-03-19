@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";

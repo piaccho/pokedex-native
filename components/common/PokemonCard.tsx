@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import { Image } from "expo-image";
 import React, { useRef, useState } from "react";
 import {

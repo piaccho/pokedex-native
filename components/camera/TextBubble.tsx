@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import React, { useEffect, useRef, useCallback } from "react";
 import { StyleSheet, View, Animated, Text } from "react-native";
 

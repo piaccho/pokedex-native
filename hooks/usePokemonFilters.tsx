@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import { useState, useCallback, useMemo } from "react";
 
 import { SortDirection } from "@/components/index/ItemSortFilter";
