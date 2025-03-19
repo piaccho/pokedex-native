@@ -11,7 +11,7 @@ import {
   AppState,
   LayoutChangeEvent,
 } from "react-native";
-import ViewShot, { captureRef } from "react-native-view-shot";
+import ViewShot from "react-native-view-shot";
 import {
   Camera,
   CameraDevice,
@@ -105,6 +105,9 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
   const [pokemonDetails, setPokemonDetails] = useState<PokemonDetail | null>(
     null,
   );
+  // Get the pokemon image URI for the sticker
+  const pokemonImageUri =
+    pokemonDetails?.sprites.other.dream_world.front_default || null;
 
   // Fetch Pokemon details when selectedPokemonId changes
   useEffect(() => {
@@ -147,6 +150,7 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
     console.log(`Container dimensions: ${width}x${height}`);
   }, []);
 
+  // Handle screen state changes to pause camera when app is in background
   useEffect(() => {
     const appStateSubscription = AppState.addEventListener(
       "change",
@@ -180,7 +184,7 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
   const [faceDetected, setFaceDetected] = useState(false);
   const [showBubble, setShowBubble] = useState(true);
   const [isFrameProcessorEnabled, setIsFrameProcessorEnabled] = useState(true);
-  const captureContainerRef = useRef<View>(null);
+  const captureContainerRef = useRef<ViewShot>(null);
 
   const handleDetectedFaces = Worklets.createRunOnJS(
     (faces: Face[], frameWidth: number, frameHeight: number) => {
@@ -224,20 +228,17 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
     [handleDetectedFaces],
   );
 
-  const capturePhoto = useCallback(async () => {
-    const photo = await camera.current?.takePhoto();
-    console.log("Photo captured:", photo);
-    return photo?.path;
-  }, []);
-
-  const captureScreen = useCallback(async () => {
+  const captureScreenshot = useCallback(async () => {
     // Capture the screen content
     let captureUri;
+
+    if (!captureContainerRef.current) {
+      console.warn("viewRef.current is null. Skipping screenshot capture.");
+      return null;
+    }
+
     try {
-      captureUri = await captureRef(camera, {
-        format: "jpg",
-        quality: 0.8,
-      });
+      captureUri = await captureContainerRef.current?.capture();
     } catch (error) {
       console.error("Error capturing photo:", error);
       return;
@@ -246,15 +247,46 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
     return captureUri;
   }, []);
 
+  const mergeImages = useCallback(
+    async (stickerOverlayUri: string, cameraPhotoUri: string) => {
+      if (!stickerOverlayUri || !cameraPhotoUri) {
+        console.error("Invalid images URIs");
+        return;
+      }
+
+      try {
+        // TODO: Implement image merging
+
+        console.log("Merged image:", mergedImage);
+        return mergedImage.uri;
+      } catch (error) {
+        console.error("Error merging images:", error);
+        return null;
+      }
+    },
+    [containerDimensions],
+  );
+
   const handleCapture = useCallback(async () => {
+    // For trigger click sound
+    // TODO: remove temporary photo files (expo-file-system)
+    const photo = await camera.current?.takePhoto();
+
+    if (!photo) {
+      console.error("Error taking photo");
+      return;
+    }
+
     console.log("Capture!");
     setShowBubble((prevState) => !prevState); // Toggle bubble to trigger animation
 
-    const captureUri = await capturePhoto();
+    const captureUri = await captureScreenshot();
     if (!captureUri) {
       console.error("Error capturing photo");
       return;
     }
+
+    const mergedImagesUri = await mergeImages(captureUri, photo?.path);
 
     // Save image to camera roll
     const ALBUM_NAME = "PokeDexNative";
@@ -268,7 +300,7 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
 
     try {
       // Save the image to the media library
-      const asset = await MediaLibrary.createAssetAsync(captureUri);
+      const asset = await MediaLibrary.createAssetAsync(mergedImagesUri);
       console.log("Image saved to media library:", asset);
 
       // Try to find existing album
@@ -315,10 +347,6 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
     console.log(`Selected Pokemon ID: ${pokemonId}`);
   }, []);
 
-  // Get the pokemon image URI for the sticker
-  const pokemonImageUri =
-    pokemonDetails?.sprites.other.dream_world.front_default || null;
-
   const toggleFrameProcessor = useCallback(() => {
     setIsFrameProcessorEnabled((prev) => !prev);
   }, []);
@@ -343,7 +371,17 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
       />
 
       {/* Camera */}
-      <View style={[styles.cameraContainer, styles.containerShadow]}>
+      <ViewShot
+        ref={captureContainerRef}
+        options={{
+          format: "png",
+          quality: 0.8,
+        }}
+        style={[
+          styles.cameraContainer,
+          // styles.containerShadow
+        ]}
+      >
         {isFrameProcessorEnabled && faceDetected && (
           <PokeStickersRenderer
             pokeStickerPositions={pokeStickerPositions}
@@ -359,7 +397,7 @@ export const CameraContainer: React.FC<CameraContainerProps> = ({ device }) => {
           photo
           frameProcessor={isFrameProcessorEnabled ? frameProcessor : undefined}
         />
-      </View>
+      </ViewShot>
 
       {/* Camera controls overlay */}
       <View style={styles.controlsOverlay}>

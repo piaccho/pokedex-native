@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import { Images } from "lucide-react-native";
 import React from "react";
 import { Platform } from "react-native";
 
@@ -57,6 +58,13 @@ export default function TabLayout() {
         options={{
           title: "PokéMap",
           tabBarIcon: ({ color }) => customIcons.map(color),
+        }}
+      />
+      <Tabs.Screen
+        name="skia"
+        options={{
+          title: "SkiaTest",
+          tabBarIcon: ({ color }) => <Images color={color} />,
         }}
       />
     </Tabs>
